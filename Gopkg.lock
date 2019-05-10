@@ -21,7 +21,7 @@
   version = "v1.2.4"
 
 [[projects]]
-  digest = "1:a9ab9a6abc6322f15e210c99dead83ea4c4bcc0465bbef02d7746cfd44635b46"
+  digest = "1:a8d7ff15a5450432b299df82b129c4bad15fe1115c439ba6c54c781a8d22a8af"
   name = "github.com/shirou/gopsutil"
   packages = [
     ".",
@@ -33,8 +33,8 @@
     "process",
   ]
   pruneopts = "UT"
-  revision = "2cbc9195c892b304060269ef280375236d2fcac9"
-  version = "v2.19.03"
+  revision = "fa9845945e5b5c6ffb19b436586ff702a30417c5"
+  version = "v2.19.04"
 
 [[projects]]
   branch = "master"
@@ -46,14 +46,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:788df6ab16e3b77c72cc916185de590254d2498027337005e0ed3e2c1f10ff7b"
+  digest = "1:646036a04e163f383d101f40e36fd3354676c7dcccc226d825200a6b9509727a"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3fd5a3612ccd7907f26270fa92579a0f2f76f734"
+  revision = "a5b02f93d862f065920dd6a40dddc66b60d0dec4"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -37,39 +37,36 @@ func extractMajorAndBuildNumber(versionString string) (int, int) {
 		build := extractBuildNumber(v3, v4)
 		if v1 == 1 {
 			return v2, build
-		} else {
-			return v1, build
 		}
-	} else {
-		return 0, 0
+		return v1, build
 	}
+	return 0, 0
+
 }
 
 func extractBuildNumber(candidate1 int, candidate2 int) int {
 	if candidate2 != 0 {
 		return candidate2
-	} else {
-		return candidate1
 	}
+	return candidate1
 }
 
 func requiresLicense(jps JavaProcessInfo) bool {
 	if strings.Contains(jps.runtimeName, "OpenJDK") {
 		return false
-	} else {
-		if jps.majorVersion == 8 {
-			if jps.buildNumber > 202 {
-				return true
-			} else {
-				return false
-			}
-		}
-		if (jps.majorVersion-11)%6 == 0 {
-			return true
-		} else {
-			return false
-		}
 	}
+	if jps.majorVersion == 8 {
+		if jps.buildNumber > 202 {
+			return true
+		}
+		return false
+
+	}
+	if (jps.majorVersion-11)%6 == 0 {
+		return true
+	}
+	return false
+
 }
 
 func extractJavaProcessInfos(processes []*ps.Process) {
@@ -79,7 +76,7 @@ func extractJavaProcessInfos(processes []*ps.Process) {
 		name, _ := p1.Name()
 		exe, _ := p1.Exe()
 		info.username, _ = p1.Username()
-		if strings.EqualFold(name, "java") {
+		if strings.EqualFold(name, "java") || strings.EqualFold(name, "java.exe") {
 			if exe != "" {
 				out, err := fetchProcessInfo(&info, exe, false)
 				if err != nil {
@@ -125,9 +122,9 @@ func extractVersionString(versionLine string) string {
 	if versionFormat {
 		allMatch := versionStringMatch.FindStringSubmatch(versionLine)
 		return allMatch[1]
-	} else {
-		return ""
 	}
+	return ""
+
 }
 
 func fetchProcessInfo(info *JavaProcessInfo, exe string, sudo bool) ([]byte, error) {
