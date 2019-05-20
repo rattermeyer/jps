@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rattermeyer/jps/cmd"
 	"testing"
 )
 
@@ -74,7 +75,7 @@ func Test_extractRuntimeName(t *testing.T) {
 func Test_requiresLicense(t *testing.T) {
 	tests := []struct {
 		name string
-		jps  JavaProcessInfo
+		jps  cmd.JavaProcessInfo
 		want bool
 	}{
 		// TODO: Add test cases.
