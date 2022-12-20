@@ -15,6 +15,7 @@ func Test_extractMajorVersion(t *testing.T) {
 		{"8_202", "1.8.0_202", 8, 202},
 		{"8_202-release", "1.8.0_202-release", 8, 202},
 		{"11", "11.0.2", 11, 2},
+		{"17", "17.0.5", 17, 5},
 		{"6", "1.6.0_45-b06", 6, 45},
 		{"5", "1.5.0_22-b03", 5, 22},
 	}
@@ -61,6 +62,7 @@ func Test_extractRuntimeName(t *testing.T) {
 		// TODO: Add test cases.
 		{"Java SE", args{runtimeLine: "Java(TM) SE Runtime Environment (build 1.6.0_45-b06)"}, "Java(TM) SE Runtime Environment"},
 		{"Oracle OpenJDK", args{runtimeLine: "OpenJDK Runtime Environment 18.9 (build 11.0.2+9)"}, "OpenJDK Runtime Environment"},
+		{"JetBrains s.r.o.", args{runtimeLine: "OpenJDK Runtime Environment JBR-17.0.5+1-653.14-jcef (build 17.0.5+1-b653.14)"}, "OpenJDK Runtime Environment JBR-"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

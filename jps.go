@@ -1,14 +1,15 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	ps "github.com/shirou/gopsutil/process"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-
-	ps "github.com/shirou/gopsutil/process"
 )
 
 type JavaProcessInfo struct {
@@ -69,7 +70,9 @@ func requiresLicense(jps JavaProcessInfo) bool {
 
 }
 
-func extractJavaProcessInfos(processes []*ps.Process) {
+func extractJavaProcessInfos(processes []*ps.Process) []JavaProcessInfo {
+	//var result []JavaProcessInfo
+	result := []JavaProcessInfo{}
 	for _, p1 := range processes {
 		info := JavaProcessInfo{}
 		info.hostname, _ = os.Hostname()
@@ -100,8 +103,10 @@ func extractJavaProcessInfos(processes []*ps.Process) {
 				}
 			}
 			fmt.Println(info)
+			result = append(result, info)
 		}
 	}
+	return result
 }
 
 func extractPropertiesFromVersionOutput(versionOutput []string, info *JavaProcessInfo) {
@@ -164,5 +169,32 @@ func extractProperties(outputLine []string, info *JavaProcessInfo) {
 
 func main() {
 	p, _ := ps.Processes()
-	extractJavaProcessInfos(p)
+
+	infos := extractJavaProcessInfos(p)
+
+	csvFile, err := os.Create("result.csv")
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+
+	csvwriter := csv.NewWriter(csvFile)
+
+	_ = csvwriter.Write([]string{"hostname", "exe", "username", "vendor", "runtimeName", "majorVersion", "buildNumber"})
+	for _, infoRow := range infos {
+		_ = csvwriter.Write([]string{
+			infoRow.hostname,
+			infoRow.exe,
+			infoRow.username,
+			infoRow.vendor,
+			infoRow.runtimeName,
+			strconv.Itoa(infoRow.majorVersion),
+			strconv.Itoa(infoRow.buildNumber),
+		})
+	}
+	csvwriter.Flush()
+	err = csvFile.Close()
+	if err != nil {
+		log.Fatalf("failed closing file: %s", err)
+	}
+
 }
