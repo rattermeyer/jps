@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type JavaProcessInfo struct {
@@ -172,7 +173,8 @@ func main() {
 
 	infos := extractJavaProcessInfos(p)
 
-	csvFile, err := os.Create("result.csv")
+	filename := fmt.Sprintf("result_%v.csv", time.Now().Format(time.RFC3339))
+	csvFile, err := os.Create(filename)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -196,5 +198,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed closing file: %s", err)
 	}
+
+	log.Printf("Found java versions are written to file %v", filename)
 
 }
