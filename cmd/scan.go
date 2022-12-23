@@ -103,7 +103,7 @@ func requiresLicense(jps JavaProcessInfo) bool {
 }
 
 func extractJavaProcessInfos(processes []*ps.Process) []JavaProcessInfo {
-	result := []JavaProcessInfo{}
+	var result []JavaProcessInfo
 	// all findings in one scan should have the same timestamp
 	// we get the timestamp once and add it to any info generated in this scan
 	scanTimestamp := time.Now()
