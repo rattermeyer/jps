@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	ps "github.com/shirou/gopsutil/process"
 	"os"
 	"os/exec"
@@ -13,8 +15,39 @@ import (
 
 var findingsFile *os.File
 
+var detectWindowsRegistry bool
+var detectLinuxAlternatives bool
+var detectRunningProcesses bool
+var detectFileSystemScan bool
+
+var appendToFindingsJson bool
+
+type DetectionMethod int64
+
+const (
+	FileSystem DetectionMethod = iota
+	LinuxAlternatives
+	RunningProcesses
+	WindowsRegistry
+)
+
+func (s DetectionMethod) String() string {
+	switch s {
+	case FileSystem:
+		return "file-system"
+	case LinuxAlternatives:
+		return "linux-alternatives"
+	case RunningProcesses:
+		return "running-processes"
+	case WindowsRegistry:
+		return "windows-registry"
+	}
+	return "unknown"
+}
+
 type JavaProcessInfo struct {
-	ScanTimestamp	time.Time
+	DetectionMethod DetectionMethod
+	ScanTimestamp   time.Time
 	Hostname        string
 	Exe             string
 	Username        string
@@ -69,13 +102,14 @@ func requiresLicense(jps JavaProcessInfo) bool {
 
 }
 
-func extractJavaProcessInfos(processes []*ps.Process) {
+func extractJavaProcessInfos(processes []*ps.Process) []JavaProcessInfo {
+	result := []JavaProcessInfo{}
 	// all findings in one scan should have the same timestamp
 	// we get the timestamp once and add it to any info generated in this scan
 	scanTimestamp := time.Now()
 
 	for _, p1 := range processes {
-		info := JavaProcessInfo{ScanTimestamp:scanTimestamp}
+		info := JavaProcessInfo{ScanTimestamp: scanTimestamp, DetectionMethod: RunningProcesses}
 		info.Hostname, _ = os.Hostname()
 		name, _ := p1.Name()
 		exe, _ := p1.Exe()
@@ -88,7 +122,8 @@ func extractJavaProcessInfos(processes []*ps.Process) {
 					out, err = fetchProcessInfo(&info, true)
 				}
 				if err == nil && len(out) > 0 {
-					extractProperties(out, &info)
+					l := strings.Split(string(out), "\n")
+					extractProperties(l, &info)
 					if info.Vendor == "" {
 						extractPropertiesFromVersionOutput(&info)
 					}
@@ -99,17 +134,11 @@ func extractJavaProcessInfos(processes []*ps.Process) {
 				}
 			}
 			info.RequiresLicense = requiresLicense(info)
-			infoAsJson, err := json.Marshal(info)
-			if err != nil {
-				log.Error(err)
-			} else {
-				if _, err = findingsFile.Write(infoAsJson); err != nil {
-					panic(err)
-				}
-				_,_ = findingsFile.WriteString("\n")
-			}
+			result = append(result, info)
 		}
+
 	}
+	return result
 }
 
 func extractPropertiesFromVersionOutput(info *JavaProcessInfo) {
@@ -172,6 +201,7 @@ func extractProperties(outputLine []string, info *JavaProcessInfo) {
 }
 
 func Scan() {
+
 	var err error
 	findingsFile, err = os.OpenFile("findings.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -180,7 +210,75 @@ func Scan() {
 
 	defer findingsFile.Close()
 
-	p, _ := ps.Processes()
-	extractJavaProcessInfos(p)
+	overallResult := []JavaProcessInfo{}
+
+	printNoYetImplemented(detectFileSystemScan, "detect-file-system-scan")
+	printNoYetImplemented(detectLinuxAlternatives, "detect-linux-alternatives")
+
+	if detectRunningProcesses {
+		fmt.Printf("Starting process detection...\n")
+		p, _ := ps.Processes()
+		resultRunningProcesses := extractJavaProcessInfos(p)
+		overallResult = append(overallResult, resultRunningProcesses...)
+	}
+
+	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
+
+	createCsvFile(overallResult)
+
+	if appendToFindingsJson {
+		addInfoToFindingsJson(overallResult)
+	}
+
 }
 
+func printNoYetImplemented(detectMethod bool, detectMethodName string) {
+	if detectMethod {
+		fmt.Printf("Starting %v ... is not yet implemented!\n", detectMethodName)
+	}
+}
+
+func addInfoToFindingsJson(infoList []JavaProcessInfo) {
+	for _, info := range infoList {
+		infoAsJson, err := json.Marshal(info)
+		if err != nil {
+			log.Error(err)
+		} else {
+			if _, err = findingsFile.Write(infoAsJson); err != nil {
+				panic(err)
+			}
+			_, _ = findingsFile.WriteString("\n")
+		}
+	}
+
+}
+
+func createCsvFile(overallResult []JavaProcessInfo) {
+	filename := fmt.Sprintf("result_%v.csv", time.Now().Format(time.RFC3339))
+	csvFile, err := os.Create(filename)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvwriter := csv.NewWriter(csvFile)
+
+	_ = csvwriter.Write([]string{"DetectionMethod", "ScanTimestamp", "Hostname", "Exe", "Username", "Vendor", "RuntimeName", "MajorVersion", "BuildNumber"})
+	for _, infoRow := range overallResult {
+		_ = csvwriter.Write([]string{
+			infoRow.DetectionMethod.String(),
+			infoRow.ScanTimestamp.Format(time.RFC3339),
+			infoRow.Hostname,
+			infoRow.Exe,
+			infoRow.Username,
+			infoRow.Vendor,
+			infoRow.RuntimeName,
+			strconv.Itoa(infoRow.MajorVersion),
+			strconv.Itoa(infoRow.BuildNumber),
+		})
+	}
+	csvwriter.Flush()
+	err = csvFile.Close()
+	if err != nil {
+		log.Fatalf("failed closing file: %s", err)
+	}
+
+}

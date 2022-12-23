@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/rattermeyer/jps/cmd"
+	cmd "opitz-consulting.com/java-scanner/cmd"
 )
 
 func main() {

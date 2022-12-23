@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/rattermeyer/jps/cmd"
+	"opitz-consulting.com/java-scanner/cmd"
 	"testing"
 )
 

@@ -43,14 +43,18 @@ for which you might require a valid license.`,
 }
 
 var scanCmd = &cobra.Command{
-	Use: "scan",
+	Use:   "scan",
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf(
+			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v\n",
+			detectRunningProcesses,
+			detectFileSystemScan,
+			detectLinuxAlternatives,
+			detectWindowsRegistry)
 		Scan()
 	},
 }
-
-
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -58,9 +62,9 @@ func Execute() {
 	findingsLog.SetFormatter(&logrus.JSONFormatter{})
 	file, err := os.OpenFile("logrus.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err == nil {
-	  findingsLog.Out = file
+		findingsLog.Out = file
 	} else {
-	  log.Info("Failed to log to file, using default stderr")
+		log.Info("Failed to log to file, using default stderr")
 	}
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -81,6 +85,11 @@ func init() {
 	// when this action is called directly.
 	scanCmd.Flags().BoolP("suspects", "s", false, "Report only java executables that might require a license")
 
+	scanCmd.Flags().BoolVarP(&detectWindowsRegistry, "detect-windows-registry", "r", false, "Activate windows registry scanning")
+	scanCmd.Flags().BoolVarP(&detectLinuxAlternatives, "detect-linux-alternatives", "a", false, "Activate linux-alternatives scanning")
+	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "detect-running-processes", "p", true, "Activate running processes scanning")
+	scanCmd.Flags().BoolVarP(&detectFileSystemScan, "detect-file-system-scan", "f", false, "Activate running processes scanning")
+	scanCmd.Flags().BoolVarP(&appendToFindingsJson, "append-to-findings-json", "j", false, "append findings to findings.json file")
 
 	rootCmd.AddCommand(scanCmd)
 }
