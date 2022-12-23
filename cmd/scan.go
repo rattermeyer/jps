@@ -117,28 +117,32 @@ func extractJavaProcessInfos(processes []*ps.Process) []JavaProcessInfo {
 		if strings.EqualFold(name, "java") || strings.EqualFold(name, "java.exe") {
 			if exe != "" {
 				info.Exe = exe
-				out, err := fetchProcessInfo(&info, false)
-				if err != nil {
-					out, err = fetchProcessInfo(&info, true)
-				}
-				if err == nil && len(out) > 0 {
-					l := strings.Split(string(out), "\n")
-					extractProperties(l, &info)
-					if info.Vendor == "" {
-						extractPropertiesFromVersionOutput(&info)
-					}
-				}
-				if err != nil { // TODO: seems to be hacked. should handle version output completely in method
-					// try without -XshowSettings:properties for java <= 1.6
-					extractPropertiesFromVersionOutput(&info)
-				}
+				fetchProcessInfoMain(info)
 			}
-			info.RequiresLicense = requiresLicense(info)
 			result = append(result, info)
 		}
 
 	}
 	return result
+}
+
+func fetchProcessInfoMain(info JavaProcessInfo) {
+	out, err := fetchProcessInfo(&info, false)
+	if err != nil {
+		out, err = fetchProcessInfo(&info, true)
+	}
+	if err == nil && len(out) > 0 {
+		l := strings.Split(string(out), "\n")
+		extractProperties(l, &info)
+		if info.Vendor == "" {
+			extractPropertiesFromVersionOutput(&info)
+		}
+	}
+	if err != nil { // TODO: seems to be hacked. should handle version output completely in method
+		// try without -XshowSettings:properties for java <= 1.6
+		extractPropertiesFromVersionOutput(&info)
+	}
+	info.RequiresLicense = requiresLicense(info)
 }
 
 func extractPropertiesFromVersionOutput(info *JavaProcessInfo) {
@@ -213,7 +217,24 @@ func Scan() {
 	overallResult := []JavaProcessInfo{}
 
 	printNoYetImplemented(detectFileSystemScan, "detect-file-system-scan")
-	printNoYetImplemented(detectLinuxAlternatives, "detect-linux-alternatives")
+
+	if detectLinuxAlternatives {
+		fmt.Printf("Starting linux alternatives detection...\n")
+		//update-alternatives --list java
+		cmdArgs := [4]string{"-n", "update-alternatives", "--list", "java"}
+		var out []byte
+		//var err error
+		command := exec.Command("sudo", cmdArgs[0:3]...)
+		out, err = command.CombinedOutput()
+
+		if err == nil && len(out) > 0 {
+			l := strings.Split(string(out), "\n")
+			fmt.Printf("found ", l, "\n")
+		} else {
+			panic(err)
+		}
+		//fetchProcessInfoMain()
+	}
 
 	if detectRunningProcesses {
 		fmt.Printf("Starting process detection...\n")
