@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	ps "github.com/shirou/gopsutil/process"
 	"os"
 	"strings"
@@ -9,10 +8,10 @@ import (
 )
 
 func detectRunningProcessesMain() []JavaInfo {
-	fmt.Printf("Starting detection 'running processes'...\n")
+	log.Infof("Starting detection 'running processes'...\n")
 	p, _ := ps.Processes()
 	resultRunningProcesses := extractJavaProcessInfos(p)
-	fmt.Printf("number of detected running processes: %d!\n", len(resultRunningProcesses))
+	log.Infof("number of detected running processes: %d!\n", len(resultRunningProcesses))
 
 	return resultRunningProcesses
 }

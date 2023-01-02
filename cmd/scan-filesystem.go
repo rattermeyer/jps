@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,31 +9,37 @@ import (
 )
 
 func detectFileSystemScanMain() []JavaInfo {
-	fmt.Printf("Starting detection 'filesystem-scan' while excluding %s...\n", detectFileSystemScanExcludePaths)
+	log.Infof("Starting detection 'filesystem-scan' while excluding %s...\n", detectFileSystemScanExcludePaths)
 	var result []JavaInfo
 	scanTimestamp := time.Now()
 	for _, rootPath := range detectFileSystemScanRootPaths {
-		fmt.Printf("Scanning startet at root path %s...\n", rootPath)
+		count := 0
+		log.Infof("Scanning startet at root path %s...\n", rootPath)
 
 		targetFiles, _ := collectFiles(rootPath, detectFileSystemScanExcludePaths)
 
-		fmt.Printf("File system scan found java installations: %v\n", targetFiles)
+		log.Infof("File system scan found java installations: %v\n", targetFiles)
 		for _, javaBinary := range targetFiles {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: FileSystem}
 			info.Hostname, _ = os.Hostname()
 			info.Exe = javaBinary
 			fetchProcessInfoMain(&info)
+
+			// include file in any case. info.valid will state if file is a valid java binary. info.
 			result = append(result, info)
+			if info.Valid {
+				count = count + 1
+			}
 		}
-		fmt.Printf("number of java installations found by filesystem scan below root path %s: %d!\n", rootPath, len(result))
+		log.Infof("number of valid java installations found by filesystem scan below root path %s: %d!\n", rootPath, count)
 	}
 	return result
 }
 
 func collectFiles(dir string, excludeList []string) (fileList []string, err error) {
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if regexp.MustCompile(strings.Join(excludeList, "|")).Match([]byte(path)) {
-			// fmt.Printf("%s\n", path)
+		if len(excludeList) > 0 && regexp.MustCompile(strings.Join(excludeList, "|")).Match([]byte(path)) {
+			//fmt.Printf("%s\n", path)
 			return nil
 		}
 

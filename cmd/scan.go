@@ -1,17 +1,13 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
-
-var findingsFile *os.File
 
 var detectWindowsRegistry bool
 var detectLinuxAlternatives bool
@@ -50,12 +46,14 @@ type JavaInfo struct {
 	ScanTimestamp   time.Time
 	Hostname        string
 	Exe             string
+	Valid           bool
 	Username        string
 	Vendor          string
 	RuntimeName     string
 	MajorVersion    int
 	BuildNumber     int
 	RequiresLicense bool
+	ErrorText       string
 }
 
 func extractMajorAndBuildNumber(versionString string) (int, int) {
@@ -102,30 +100,49 @@ func requiresLicense(jps *JavaInfo) bool {
 
 }
 
-func fetchProcessInfoMain(info *JavaInfo) {
+func fetchProcessInfoMain(info *JavaInfo) error {
+	info.Valid = true
 	out, err := fetchProcessInfo(info, false)
 	if err != nil {
 		out, err = fetchProcessInfo(info, true)
 	}
-	if err == nil && len(out) > 0 {
-		l := strings.Split(string(out), "\n")
-		extractProperties(l, info)
-		if info.Vendor == "" {
-			extractPropertiesFromVersionOutput(info)
+	if err == nil {
+		if len(out) > 0 {
+			l := strings.Split(string(out), "\n")
+			extractProperties(l, info)
+			if info.Vendor == "" {
+				extractPropertiesFromVersionOutput(info)
+			}
 		}
-	}
-	if err != nil { // TODO: seems to be hacked. should handle version output completely in method
+	} else {
 		// try without -XshowSettings:properties for java <= 1.6
-		extractPropertiesFromVersionOutput(info)
+		err2 := extractPropertiesFromVersionOutput(info)
+		if err2 != nil {
+			return err2
+		}
+		return err
 	}
+
 	info.RequiresLicense = requiresLicense(info)
+	return nil
+
 }
 
-func extractPropertiesFromVersionOutput(info *JavaInfo) {
-	out, _ := exec.Command(info.Exe, "-version").CombinedOutput()
+func extractPropertiesFromVersionOutput(info *JavaInfo) error {
+
+	var err error
+	err = nil
+	out, err := exec.Command(info.Exe, "-version").CombinedOutput()
+	if err != nil {
+		log.Warnf("extractPropertiesFromVersionOutput exe:%s, error:%s", info.Exe, err)
+		info.Valid = false
+		info.ErrorText = err.Error()
+		return err
+	}
 	versionOutput := strings.Split(string(out), "\n")
 	info.MajorVersion, info.BuildNumber = extractMajorAndBuildNumber(extractVersionString(versionOutput[0]))
 	info.RuntimeName = extractRuntimeName(versionOutput[1])
+	return nil
 }
 
 func extractRuntimeName(runtimeLine string) string {
@@ -182,14 +199,6 @@ func extractProperties(outputLine []string, info *JavaInfo) {
 
 func Scan() {
 
-	var err error
-	findingsFile, err = os.OpenFile("findings.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer findingsFile.Close()
-
 	overallResult := []JavaInfo{}
 
 	if detectRunningProcesses {
@@ -210,7 +219,7 @@ func Scan() {
 
 	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
 
-	fmt.Printf("Overall-results: detected %d java installations!\n", len(overallResult))
+	logOverallResults(overallResult)
 	createCsvFile(overallResult)
 
 	if appendToFindingsJson {
@@ -221,21 +230,7 @@ func Scan() {
 
 func printNoYetImplemented(detectMethod bool, detectMethodName string) {
 	if detectMethod {
-		fmt.Printf("Starting %v ... is not yet implemented!\n", detectMethodName)
+		log.Warnf("Starting %v ... is not yet implemented!\n", detectMethodName)
+		fmt.Println()
 	}
-}
-
-func addInfoToFindingsJson(infoList []JavaInfo) {
-	for _, info := range infoList {
-		infoAsJson, err := json.Marshal(info)
-		if err != nil {
-			log.Error(err)
-		} else {
-			if _, err = findingsFile.Write(infoAsJson); err != nil {
-				panic(err)
-			}
-			_, _ = findingsFile.WriteString("\n")
-		}
-	}
-
 }

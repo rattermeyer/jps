@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -9,7 +8,7 @@ import (
 )
 
 func detectLinuxAlternativesMain() []JavaInfo {
-	fmt.Printf("Starting detection 'linux alternatives'...\n")
+	log.Infof("Starting detection 'linux alternatives'...\n")
 	//update-alternatives --list java
 	cmdArgs := [4]string{"-n", "update-alternatives", "--list", "java"}
 
@@ -27,7 +26,7 @@ func detectLinuxAlternativesMain() []JavaInfo {
 			return c == '\n'
 		}
 		javaAlternatives := strings.FieldsFunc(string(out), splitFunction)
-		fmt.Printf("detected java alternatives are: %q\n", javaAlternatives)
+		log.Infof("detected java alternatives are: %q\n", javaAlternatives)
 
 		for _, javaAlternative := range javaAlternatives {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: LinuxAlternatives}
@@ -37,8 +36,8 @@ func detectLinuxAlternativesMain() []JavaInfo {
 			result = append(result, info)
 		}
 	} else {
-		fmt.Printf("Found error: %s, out: %s\n", err.Error(), out)
+		log.Infof("Found error: %s, out: %s\n", err.Error(), out)
 	}
-	fmt.Printf("number of detected java alternatives: %d!\n", len(result))
+	log.Infof("number of detected java alternatives: %d!\n", len(result))
 	return result
 }

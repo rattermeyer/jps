@@ -46,7 +46,7 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf(
+		log.Infof(
 			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v\n\n",
 			detectRunningProcesses,
 			detectFileSystemScan,
