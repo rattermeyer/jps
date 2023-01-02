@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	ps "github.com/shirou/gopsutil/process"
 	"os"
 	"os/exec"
 	"regexp"
@@ -45,7 +43,7 @@ func (s DetectionMethod) String() string {
 	return "unknown"
 }
 
-type JavaProcessInfo struct {
+type JavaInfo struct {
 	DetectionMethod DetectionMethod
 	ScanTimestamp   time.Time
 	Hostname        string
@@ -84,7 +82,7 @@ func extractBuildNumber(candidate1 int, candidate2 int) int {
 	return candidate1
 }
 
-func requiresLicense(jps JavaProcessInfo) bool {
+func requiresLicense(jps *JavaInfo) bool {
 	if strings.Contains(jps.RuntimeName, "OpenJDK") {
 		return false
 	}
@@ -102,46 +100,26 @@ func requiresLicense(jps JavaProcessInfo) bool {
 
 }
 
-func extractJavaProcessInfos(processes []*ps.Process) []JavaProcessInfo {
-	var result []JavaProcessInfo
-	// all findings in one scan should have the same timestamp
-	// we get the timestamp once and add it to any info generated in this scan
-	scanTimestamp := time.Now()
-
-	for _, p1 := range processes {
-		info := JavaProcessInfo{ScanTimestamp: scanTimestamp, DetectionMethod: RunningProcesses}
-		info.Hostname, _ = os.Hostname()
-		name, _ := p1.Name()
-		exe, _ := p1.Exe()
-		info.Username, _ = p1.Username()
-		if strings.EqualFold(name, "java") || strings.EqualFold(name, "java.exe") {
-			if exe != "" {
-				info.Exe = exe
-				out, err := fetchProcessInfo(&info, false)
-				if err != nil {
-					out, err = fetchProcessInfo(&info, true)
-				}
-				if err == nil && len(out) > 0 {
-					l := strings.Split(string(out), "\n")
-					extractProperties(l, &info)
-					if info.Vendor == "" {
-						extractPropertiesFromVersionOutput(&info)
-					}
-				}
-				if err != nil { // TODO: seems to be hacked. should handle version output completely in method
-					// try without -XshowSettings:properties for java <= 1.6
-					extractPropertiesFromVersionOutput(&info)
-				}
-			}
-			info.RequiresLicense = requiresLicense(info)
-			result = append(result, info)
-		}
-
+func fetchProcessInfoMain(info *JavaInfo) {
+	out, err := fetchProcessInfo(info, false)
+	if err != nil {
+		out, err = fetchProcessInfo(info, true)
 	}
-	return result
+	if err == nil && len(out) > 0 {
+		l := strings.Split(string(out), "\n")
+		extractProperties(l, info)
+		if info.Vendor == "" {
+			extractPropertiesFromVersionOutput(info)
+		}
+	}
+	if err != nil { // TODO: seems to be hacked. should handle version output completely in method
+		// try without -XshowSettings:properties for java <= 1.6
+		extractPropertiesFromVersionOutput(info)
+	}
+	info.RequiresLicense = requiresLicense(info)
 }
 
-func extractPropertiesFromVersionOutput(info *JavaProcessInfo) {
+func extractPropertiesFromVersionOutput(info *JavaInfo) {
 	out, _ := exec.Command(info.Exe, "-version").CombinedOutput()
 	versionOutput := strings.Split(string(out), "\n")
 	info.MajorVersion, info.BuildNumber = extractMajorAndBuildNumber(extractVersionString(versionOutput[0]))
@@ -166,7 +144,7 @@ func extractVersionString(versionLine string) string {
 
 }
 
-func fetchProcessInfo(info *JavaProcessInfo, sudo bool) ([]byte, error) {
+func fetchProcessInfo(info *JavaInfo, sudo bool) ([]byte, error) {
 	cmdArgs := [4]string{"-n", info.Exe, "-XshowSettings:properties", "-version"}
 	var out []byte
 	var err error
@@ -180,7 +158,7 @@ func fetchProcessInfo(info *JavaProcessInfo, sudo bool) ([]byte, error) {
 	return out, err
 }
 
-func extractProperties(outputLine []string, info *JavaProcessInfo) {
+func extractProperties(outputLine []string, info *JavaInfo) {
 	var validProperty = regexp.MustCompile("^(?P<Key>[a-z.]+) = (?P<Value>.+)$")
 	for _, l1 := range outputLine {
 		line := strings.TrimSpace(l1)
@@ -210,20 +188,23 @@ func Scan() {
 
 	defer findingsFile.Close()
 
-	overallResult := []JavaProcessInfo{}
+	overallResult := []JavaInfo{}
 
 	printNoYetImplemented(detectFileSystemScan, "detect-file-system-scan")
-	printNoYetImplemented(detectLinuxAlternatives, "detect-linux-alternatives")
+
+	if detectLinuxAlternatives {
+		resultLinuxAlternatives := detectLinuxAlternativesMain()
+		overallResult = append(overallResult, resultLinuxAlternatives...)
+	}
 
 	if detectRunningProcesses {
-		fmt.Printf("Starting process detection...\n")
-		p, _ := ps.Processes()
-		resultRunningProcesses := extractJavaProcessInfos(p)
+		resultRunningProcesses := detectRunningProcessesMain()
 		overallResult = append(overallResult, resultRunningProcesses...)
 	}
 
 	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
 
+	fmt.Printf("Overall-results: detected %d java installations!\n", len(overallResult))
 	createCsvFile(overallResult)
 
 	if appendToFindingsJson {
@@ -238,7 +219,7 @@ func printNoYetImplemented(detectMethod bool, detectMethodName string) {
 	}
 }
 
-func addInfoToFindingsJson(infoList []JavaProcessInfo) {
+func addInfoToFindingsJson(infoList []JavaInfo) {
 	for _, info := range infoList {
 		infoAsJson, err := json.Marshal(info)
 		if err != nil {
@@ -249,36 +230,6 @@ func addInfoToFindingsJson(infoList []JavaProcessInfo) {
 			}
 			_, _ = findingsFile.WriteString("\n")
 		}
-	}
-
-}
-
-func createCsvFile(overallResult []JavaProcessInfo) {
-	filename := fmt.Sprintf("result_%v.csv", time.Now().Format(time.RFC3339))
-	csvFile, err := os.Create(filename)
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-	csvwriter := csv.NewWriter(csvFile)
-
-	_ = csvwriter.Write([]string{"DetectionMethod", "ScanTimestamp", "Hostname", "Exe", "Username", "Vendor", "RuntimeName", "MajorVersion", "BuildNumber"})
-	for _, infoRow := range overallResult {
-		_ = csvwriter.Write([]string{
-			infoRow.DetectionMethod.String(),
-			infoRow.ScanTimestamp.Format(time.RFC3339),
-			infoRow.Hostname,
-			infoRow.Exe,
-			infoRow.Username,
-			infoRow.Vendor,
-			infoRow.RuntimeName,
-			strconv.Itoa(infoRow.MajorVersion),
-			strconv.Itoa(infoRow.BuildNumber),
-		})
-	}
-	csvwriter.Flush()
-	err = csvFile.Close()
-	if err != nil {
-		log.Fatalf("failed closing file: %s", err)
 	}
 
 }
