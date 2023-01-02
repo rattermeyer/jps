@@ -107,8 +107,7 @@ func extractPropertiesFromVersionOutput(info *JavaInfo) error {
 	out, err := exec.Command(info.Exe, "-version").CombinedOutput()
 	if err != nil {
 		log.Warnf("extractPropertiesFromVersionOutput exe:%s, error:%s", info.Exe, err)
-		info.Valid = false
-		info.ErrorText = err.Error()
+		addErrorText(info, err, string(out))
 		return err
 	}
 	versionOutput := strings.Split(string(out), "\n")
@@ -163,27 +162,45 @@ func fetchProcessInfo(info *JavaInfo, sudo bool) error {
 		}
 		return nil
 	}
-	if err != nil && len(out) > 0 {
-		unrecognizedOption := false
 
+	//err != nil
+
+	unrecognizedOption := isUnrecognizedOption(out)
+	if unrecognizedOption {
+		// try without -XshowSettings:properties for java <= 1.6
+		return extractPropertiesFromVersionOutput(info)
+	} else {
+		addErrorText(info, err, string(out))
+
+		return err
+	}
+}
+
+func isUnrecognizedOption(out []byte) bool {
+	unrecognizedOption := false
+	if len(out) > 0 {
 		outLines := strings.Split(string(out), "\n")
 		for _, line := range outLines {
 			unrecognizedOption =
 				unrecognizedOption || strings.Contains(line, "Unrecognized option: -XshowSettings:properties")
 		}
-
-		if unrecognizedOption {
-			// try without -XshowSettings:properties for java <= 1.6
-			err2 := extractPropertiesFromVersionOutput(info)
-			return err2
-		} else {
-			info.Valid = false
-			info.ErrorText = err.Error()
-			return err
-		}
 	}
-	// if out
-	return err
+	return unrecognizedOption
+}
+
+func addErrorText(info *JavaInfo, err error, details string) {
+	info.Valid = false
+
+	errorSeparator := ""
+	if info.ErrorText != "" {
+		errorSeparator = "| "
+	}
+	detailsOutput := ""
+	if details != "" {
+		detailsOutput = " - details: " + strings.ReplaceAll(details, "\n", "")
+	}
+	info.ErrorText = info.ErrorText + errorSeparator + err.Error() + detailsOutput
+
 }
 
 func extractProperties(outputLine []string, info *JavaInfo) {
