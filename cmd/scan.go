@@ -100,34 +100,6 @@ func requiresLicense(jps *JavaInfo) bool {
 
 }
 
-func fetchProcessInfoMain(info *JavaInfo) error {
-	info.Valid = true
-	out, err := fetchProcessInfo(info, false)
-	if err != nil {
-		out, err = fetchProcessInfo(info, true)
-	}
-	if err == nil {
-		if len(out) > 0 {
-			l := strings.Split(string(out), "\n")
-			extractProperties(l, info)
-			if info.Vendor == "" {
-				extractPropertiesFromVersionOutput(info)
-			}
-		}
-	} else {
-		// try without -XshowSettings:properties for java <= 1.6
-		err2 := extractPropertiesFromVersionOutput(info)
-		if err2 != nil {
-			return err2
-		}
-		return err
-	}
-
-	info.RequiresLicense = requiresLicense(info)
-	return nil
-
-}
-
 func extractPropertiesFromVersionOutput(info *JavaInfo) error {
 
 	var err error
@@ -163,7 +135,17 @@ func extractVersionString(versionLine string) string {
 
 }
 
-func fetchProcessInfo(info *JavaInfo, sudo bool) ([]byte, error) {
+func fetchProcessInfoMain(info *JavaInfo) {
+	info.Valid = true
+	err := fetchProcessInfo(info, false)
+	if err != nil {
+		err = fetchProcessInfo(info, true)
+	}
+
+	info.RequiresLicense = requiresLicense(info)
+}
+
+func fetchProcessInfo(info *JavaInfo, sudo bool) error {
 	cmdArgs := [4]string{"-n", info.Exe, "-XshowSettings:properties", "-version"}
 	var out []byte
 	var err error
@@ -174,7 +156,34 @@ func fetchProcessInfo(info *JavaInfo, sudo bool) ([]byte, error) {
 		command := exec.Command(info.Exe, cmdArgs[2:4]...)
 		out, err = command.CombinedOutput()
 	}
-	return out, err
+	if err == nil {
+		if len(out) > 0 {
+			l := strings.Split(string(out), "\n")
+			extractProperties(l, info)
+		}
+		return nil
+	}
+	if err != nil && len(out) > 0 {
+		unrecognizedOption := false
+
+		outLines := strings.Split(string(out), "\n")
+		for _, line := range outLines {
+			unrecognizedOption =
+				unrecognizedOption || strings.Contains(line, "Unrecognized option: -XshowSettings:properties")
+		}
+
+		if unrecognizedOption {
+			// try without -XshowSettings:properties for java <= 1.6
+			err2 := extractPropertiesFromVersionOutput(info)
+			return err2
+		} else {
+			info.Valid = false
+			info.ErrorText = err.Error()
+			return err
+		}
+	}
+	// if out
+	return err
 }
 
 func extractProperties(outputLine []string, info *JavaInfo) {
