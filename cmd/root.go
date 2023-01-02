@@ -47,7 +47,7 @@ var scanCmd = &cobra.Command{
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf(
-			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v\n",
+			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v\n\n",
 			detectRunningProcesses,
 			detectFileSystemScan,
 			detectLinuxAlternatives,
@@ -83,12 +83,26 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	scanCmd.Flags().BoolP("suspects", "s", false, "Report only java executables that might require a license")
 
-	scanCmd.Flags().BoolVarP(&detectWindowsRegistry, "detect-windows-registry", "r", false, "Activate windows registry scanning")
-	scanCmd.Flags().BoolVarP(&detectLinuxAlternatives, "detect-linux-alternatives", "a", false, "Activate linux-alternatives scanning")
-	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "detect-running-processes", "p", true, "Activate running processes scanning")
-	scanCmd.Flags().BoolVarP(&detectFileSystemScan, "detect-file-system-scan", "f", false, "Activate running processes scanning")
+	scanCmd.Flags().BoolVarP(&detectWindowsRegistry, "scan-windows-registry", "r", false, "Activate windows registry scanning")
+	scanCmd.Flags().BoolVarP(&detectLinuxAlternatives, "scan-linux-alternatives", "a", false, "Activate linux-alternatives scanning")
+	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "scan-running-processes", "p", true, "Activate running processes scanning")
+
+	scanCmd.Flags().BoolVarP(&detectFileSystemScan, "scan-file-system", "f", false, "Activate running processes scanning")
+
+	defaultRootPaths := []string{"/usr/lib/jvm"}
+	scanCmd.Flags().StringSliceVarP(&detectFileSystemScanRootPaths,
+		"scan-file-system-root-paths",
+		"R",
+		defaultRootPaths,
+		"A list of root paths, where the file system scan has to start")
+
+	defaultExcludePaths := []string{}
+	scanCmd.Flags().StringSliceVarP(&detectFileSystemScanExcludePaths,
+		"scan-file-system-exclude-paths",
+		"E",
+		defaultExcludePaths,
+		"A list of paths, that should be excluded from the search")
 	scanCmd.Flags().BoolVarP(&appendToFindingsJson, "append-to-findings-json", "j", false, "append findings to findings.json file")
 
 	rootCmd.AddCommand(scanCmd)

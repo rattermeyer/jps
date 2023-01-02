@@ -15,3 +15,27 @@ To get help, run the application via
 
 to print out the configuration options.
 
+
+### Searching in file system
+
+Executing search in default file system root path below _/usr/lib/jvm_
+
+    go run jps.go scan -f
+
+Executing search in given file system root paths:
+
+- by using flag _scan-file-system-root-paths_:
+
+
+    go run jps.go scan -f --scan-file-system-root-paths "/home/vagrant/.sdkman,/usr/lib/jvm"
+
+- or by using shorthand notation
+
+    go run jps.go scan -f -R "/home/vagrant/.sdkman,/usr/lib/jvm"
+
+Exclude directories from search
+
+- by using flag _scan-file-system-exclude-paths_ / _-E_:
+
+
+    go run jps.go scan -f -R "/home/vagrant/" -E /home/vagrant/.sdkman/,/home/vagrant/.jdks/

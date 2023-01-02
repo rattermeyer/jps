@@ -9,10 +9,10 @@ import (
 )
 
 func detectRunningProcessesMain() []JavaInfo {
-	fmt.Printf("Starting process detection...\n")
+	fmt.Printf("Starting detection 'running processes'...\n")
 	p, _ := ps.Processes()
 	resultRunningProcesses := extractJavaProcessInfos(p)
-	fmt.Printf("detected %d running processes!\n", len(resultRunningProcesses))
+	fmt.Printf("number of detected running processes: %d!\n", len(resultRunningProcesses))
 
 	return resultRunningProcesses
 }

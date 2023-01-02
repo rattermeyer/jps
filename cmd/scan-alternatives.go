@@ -9,7 +9,7 @@ import (
 )
 
 func detectLinuxAlternativesMain() []JavaInfo {
-	fmt.Printf("Starting linux alternatives detection...\n")
+	fmt.Printf("Starting detection 'linux alternatives'...\n")
 	//update-alternatives --list java
 	cmdArgs := [4]string{"-n", "update-alternatives", "--list", "java"}
 
@@ -39,5 +39,6 @@ func detectLinuxAlternativesMain() []JavaInfo {
 	} else {
 		fmt.Printf("Found error: %s, out: %s\n", err.Error(), out)
 	}
+	fmt.Printf("number of detected java alternatives: %d!\n", len(result))
 	return result
 }

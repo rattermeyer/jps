@@ -17,6 +17,8 @@ var detectWindowsRegistry bool
 var detectLinuxAlternatives bool
 var detectRunningProcesses bool
 var detectFileSystemScan bool
+var detectFileSystemScanRootPaths []string
+var detectFileSystemScanExcludePaths []string
 
 var appendToFindingsJson bool
 
@@ -190,16 +192,20 @@ func Scan() {
 
 	overallResult := []JavaInfo{}
 
-	printNoYetImplemented(detectFileSystemScan, "detect-file-system-scan")
-
-	if detectLinuxAlternatives {
-		resultLinuxAlternatives := detectLinuxAlternativesMain()
-		overallResult = append(overallResult, resultLinuxAlternatives...)
-	}
-
 	if detectRunningProcesses {
 		resultRunningProcesses := detectRunningProcessesMain()
 		overallResult = append(overallResult, resultRunningProcesses...)
+		fmt.Println()
+	}
+	if detectLinuxAlternatives {
+		resultLinuxAlternatives := detectLinuxAlternativesMain()
+		overallResult = append(overallResult, resultLinuxAlternatives...)
+		fmt.Println()
+	}
+	if detectFileSystemScan {
+		resultFileSystemScan := detectFileSystemScanMain()
+		overallResult = append(overallResult, resultFileSystemScan...)
+		fmt.Println()
 	}
 
 	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
