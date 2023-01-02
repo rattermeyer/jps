@@ -23,7 +23,7 @@ func detectFileSystemScanMain() []JavaInfo {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: FileSystem}
 			info.Hostname, _ = os.Hostname()
 			info.Exe = javaBinary
-			fetchProcessInfoMain(&info)
+			analyzeJavaBinaryMain(&info)
 
 			// include file in any case. info.valid will state if file is a valid java binary. info.
 			result = append(result, info)

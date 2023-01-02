@@ -9,14 +9,14 @@ import (
 
 func detectRunningProcessesMain() []JavaInfo {
 	log.Infof("Starting detection 'running processes'...\n")
-	p, _ := ps.Processes()
-	resultRunningProcesses := extractJavaProcessInfos(p)
+	resultRunningProcesses := extractJavaProcessInfos()
 	log.Infof("number of detected running processes: %d!\n", len(resultRunningProcesses))
 
 	return resultRunningProcesses
 }
 
-func extractJavaProcessInfos(processes []*ps.Process) []JavaInfo {
+func extractJavaProcessInfos() []JavaInfo {
+	processes, _ := ps.Processes()
 	var result []JavaInfo
 	// all findings in one scan should have the same timestamp
 	// we get the timestamp once and add it to any info generated in this scan
@@ -31,7 +31,7 @@ func extractJavaProcessInfos(processes []*ps.Process) []JavaInfo {
 		if strings.EqualFold(name, "java") || strings.EqualFold(name, "java.exe") {
 			if exe != "" {
 				info.Exe = exe
-				fetchProcessInfoMain(&info)
+				analyzeJavaBinaryMain(&info)
 			}
 			result = append(result, info)
 		}

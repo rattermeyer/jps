@@ -32,7 +32,7 @@ func detectLinuxAlternativesMain() []JavaInfo {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: LinuxAlternatives}
 			info.Hostname, _ = os.Hostname()
 			info.Exe = javaAlternative
-			fetchProcessInfoMain(&info)
+			analyzeJavaBinaryMain(&info)
 			result = append(result, info)
 		}
 	} else {

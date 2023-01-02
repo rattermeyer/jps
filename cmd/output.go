@@ -81,3 +81,10 @@ func logOverallResults(overallResult []JavaInfo) {
 	}
 	log.Infof("Overall-results: detected %d valid java installations!\n", countValid)
 }
+
+func printNoYetImplemented(detectMethod bool, detectMethodName string) {
+	if detectMethod {
+		log.Warnf("Starting %v ... is not yet implemented!\n", detectMethodName)
+		fmt.Println()
+	}
+}
