@@ -52,7 +52,6 @@ type JavaInfo struct {
 	RuntimeName     string
 	MajorVersion    int
 	BuildNumber     int
-	RequiresLicense bool
 	ErrorText       string
 }
 
@@ -80,24 +79,6 @@ func extractBuildNumber(candidate1 int, candidate2 int) int {
 		return candidate2
 	}
 	return candidate1
-}
-
-func requiresLicense(jps *JavaInfo) bool {
-	if strings.Contains(jps.RuntimeName, "OpenJDK") {
-		return false
-	}
-	if jps.MajorVersion == 8 {
-		if jps.BuildNumber > 202 {
-			return true
-		}
-		return false
-
-	}
-	if (jps.MajorVersion-11)%6 == 0 {
-		return true
-	}
-	return false
-
 }
 
 func extractPropertiesFromVersionOutput(info *JavaInfo) error {
@@ -140,8 +121,6 @@ func fetchProcessInfoMain(info *JavaInfo) {
 	if err != nil {
 		err = fetchProcessInfo(info, true)
 	}
-
-	info.RequiresLicense = requiresLicense(info)
 }
 
 func fetchProcessInfo(info *JavaInfo, sudo bool) error {
