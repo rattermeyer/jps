@@ -59,6 +59,11 @@ type JavaInfo struct {
 
 func Scan() {
 
+	if !(detectCurrentPath || detectLinuxAlternatives || detectWindowsRegistry || detectRunningProcesses || detectFileSystemScan) {
+		log.Infof("No detected methods configured! Use './java-scanner scan --help' for a list of configuration options")
+		return
+	}
+
 	overallResult := []JavaInfo{}
 
 	if detectRunningProcesses {

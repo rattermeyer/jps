@@ -31,12 +31,9 @@ var findingsLog = logrus.New()
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "jps",
-	Short: "Java Process Scanner",
-	Long: `Java Process Scanner (jps) is a programm to scan and monitor your running processes and detect java instances
-for which you might require a valid license.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	Use:   "java-scanner",
+	Short: "Java Scanner",
+	Long:  `Java Scanner is a programm to detect java installations and running java processes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Scan()
 	},
@@ -47,11 +44,12 @@ var scanCmd = &cobra.Command{
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Infof(
-			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v\n\n",
+			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v, current-path:%v\n\n",
 			detectRunningProcesses,
 			detectFileSystemScan,
 			detectLinuxAlternatives,
-			detectWindowsRegistry)
+			detectWindowsRegistry,
+			detectCurrentPath)
 		Scan()
 	},
 }
@@ -86,8 +84,8 @@ func init() {
 
 	scanCmd.Flags().BoolVarP(&detectWindowsRegistry, "scan-windows-registry", "r", false, "Activate windows registry scanning")
 	scanCmd.Flags().BoolVarP(&detectLinuxAlternatives, "scan-linux-alternatives", "a", false, "Activate linux-alternatives scanning")
-	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "scan-running-processes", "p", true, "Activate running processes scanning")
-	scanCmd.Flags().BoolVarP(&detectCurrentPath, "scan-current-path", "c", true, "Activate scanning of current path")
+	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "scan-running-processes", "p", false, "Activate running processes scanning")
+	scanCmd.Flags().BoolVarP(&detectCurrentPath, "scan-current-path", "c", false, "Activate scanning of current path")
 
 	scanCmd.Flags().BoolVarP(&detectFileSystemScan, "scan-file-system", "f", false, "Activate running processes scanning")
 
