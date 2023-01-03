@@ -79,9 +79,12 @@ By using flag _scan-file-system-exclude-paths_ / _-E_:
 
     ./java-scanner scan -f -R "/home/vagrant/" -E /home/vagrant/.sdkman/,/home/vagrant/.jdks/
 
-### Searching in windows registry
-via
+### Scan in windows registry for JavaHome keys
+To search the windows registry for JavaHome Keys below the Path "HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft", just run
 
     ./java-scanner scan -r
 
-NOTE: searching in windows registry is yet not implemented!
+### Scan for java binary in  current path
+To search for a java binary that is located via the current path, just run
+
+    ./java-scanner scan -c
