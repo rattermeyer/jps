@@ -10,7 +10,9 @@ import (
 )
 
 func createCsvFile(overallResult []JavaInfo) {
-	filename := fmt.Sprintf("result_%v.csv", time.Now().Format(time.RFC3339))
+	//timestampLayout := time.RFC3339
+	timestampLayout := "2006-01-02_15-04-05"
+	filename := fmt.Sprintf("result_%v.csv", time.Now().Format(timestampLayout))
 	csvFile, err := os.Create(filename)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
@@ -21,7 +23,7 @@ func createCsvFile(overallResult []JavaInfo) {
 	for _, infoRow := range overallResult {
 		_ = csvwriter.Write([]string{
 			infoRow.DetectionMethod.String(),
-			infoRow.ScanTimestamp.Format(time.RFC3339),
+			infoRow.ScanTimestamp.Format(timestampLayout),
 			infoRow.Hostname,
 			infoRow.Exe,
 			strconv.FormatBool(infoRow.Valid),
