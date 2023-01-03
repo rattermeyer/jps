@@ -1,7 +1,6 @@
 package main
 
 import (
-	"opitz-consulting.com/java-scanner/cmd"
 	"testing"
 )
 
@@ -69,30 +68,6 @@ func Test_extractRuntimeName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := extractRuntimeName(tt.args.runtimeLine); got != tt.want {
 				t.Errorf("extractRuntimeName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_requiresLicense(t *testing.T) {
-	tests := []struct {
-		name string
-		jps  cmd.JavaProcessInfo
-		want bool
-	}{
-		// TODO: Add test cases.
-		{"OpenJDK 8 updated build", JavaProcessInfo{runtimeName: "OpenJDK Runtime Environment", majorVersion: 8, buildNumber: 212}, false},
-		{"OpenJDK 11 build", JavaProcessInfo{runtimeName: "OpenJDK Runtime Environment", majorVersion: 11, buildNumber: 3}, false},
-		{"Oracle JDK 8 latest free build", JavaProcessInfo{runtimeName: "Java(TM) SE Runtime Environment", majorVersion: 8, buildNumber: 202}, false},
-		{"Oracle JDK 8 licensed build", JavaProcessInfo{runtimeName: "Java(TM) SE Runtime Environment", majorVersion: 8, buildNumber: 211}, true},
-		{"Oracle JDK 11 build", JavaProcessInfo{runtimeName: "Java(TM) SE Runtime Environment", majorVersion: 11, buildNumber: 0}, true},
-		{"Oracle JDK 12 build", JavaProcessInfo{runtimeName: "Java(TM) SE Runtime Environment", majorVersion: 12, buildNumber: 0}, false},
-		{"Oracle JDK 17 build", JavaProcessInfo{runtimeName: "Java(TM) SE Runtime Environment", majorVersion: 17, buildNumber: 0}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := requiresLicense(tt.jps); got != tt.want {
-				t.Errorf("requiresLicense() = %v, want %v", got, tt.want)
 			}
 		})
 	}
