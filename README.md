@@ -1,10 +1,12 @@
-# Java Process Scanner
+# Java Scanner
 
-The Java Process Scanner scans for java installations and running java processes on the current 
+The Java Scanner scans for java installations and running java processes on the current 
 host and creates a csv file with information about the JRE/JDK instances, that have been found.
 
 The information helps to determine, if a license is required for the used version, due to the changed Oracle
 license terms.
+
+The java scanner is implemented in golang.
 
 
 # compile
