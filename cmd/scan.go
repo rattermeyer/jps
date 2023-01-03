@@ -77,7 +77,11 @@ func Scan() {
 		fmt.Println()
 	}
 
-	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
+	if detectWindowsRegistry {
+		resultFileSystemScan := detectWindowsRegistryMain()
+		overallResult = append(overallResult, resultFileSystemScan...)
+		fmt.Println()
+	}
 
 	if detectCurrentPath {
 		resultCurrentPath := detectCurrentPathMain()
