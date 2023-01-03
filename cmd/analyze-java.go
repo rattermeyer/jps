@@ -13,7 +13,9 @@ func analyzeJavaBinaryMain(info *JavaInfo) {
 	if err != nil {
 		err = _analyzeJavaBinary(info, true)
 		//note that errorText is already added to info.ErrorText
-		log.Warnf("Failed to analyze java binary %s: %s", info.Exe, err.Error())
+		if err != nil {
+			log.Warnf("Failed to analyze java binary %s: %s", info.Exe, err.Error())
+		}
 
 	}
 }
