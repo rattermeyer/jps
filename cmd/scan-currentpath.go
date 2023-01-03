@@ -7,7 +7,7 @@ import (
 )
 
 func detectCurrentPathMain() []JavaInfo {
-	log.Infof("Starting detection '%s'...\n", CurrentPath)
+	log.Infof("Starting detection '%s'...", CurrentPath)
 	var result []JavaInfo
 
 	path, err := exec.LookPath("java")
@@ -21,7 +21,7 @@ func detectCurrentPathMain() []JavaInfo {
 	info.Exe = path
 	analyzeJavaBinaryMain(&info)
 	result = append(result, info)
-	log.Infof("Found java executable in current path: %v \n", path)
+	log.Infof("Found java executable in current path: %v", path)
 	return result
 
 }

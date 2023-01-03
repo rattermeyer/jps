@@ -8,7 +8,7 @@ import (
 )
 
 func detectLinuxAlternativesMain() []JavaInfo {
-	log.Infof("Starting detection '%s'...\n", LinuxAlternatives)
+	log.Infof("Starting detection '%s'...", LinuxAlternatives)
 	//update-alternatives --list java
 	cmdArgs := [4]string{"-n", "update-alternatives", "--list", "java"}
 
@@ -26,7 +26,7 @@ func detectLinuxAlternativesMain() []JavaInfo {
 			return c == '\n'
 		}
 		javaAlternatives := strings.FieldsFunc(string(out), splitFunction)
-		log.Infof("detected java alternatives are: %q\n", javaAlternatives)
+		log.Infof("detected java alternatives are: %q", javaAlternatives)
 
 		for _, javaAlternative := range javaAlternatives {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: LinuxAlternatives}
@@ -36,8 +36,8 @@ func detectLinuxAlternativesMain() []JavaInfo {
 			result = append(result, info)
 		}
 	} else {
-		log.Infof("Found error: %s, out: %s\n", err.Error(), out)
+		log.Infof("Found error: %s, out: %s", err.Error(), out)
 	}
-	log.Infof("number of detected java alternatives: %d!\n", len(result))
+	log.Infof("number of detected java alternatives: %d!", len(result))
 	return result
 }

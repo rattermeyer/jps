@@ -43,15 +43,30 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Infof(
-			"Detection methods activated: running processes:%v, filesystem scan:%v, linux-alternatives:%v, windows-registry: %v, current-path:%v\n\n",
-			detectRunningProcesses,
-			detectFileSystemScan,
-			detectLinuxAlternatives,
-			detectWindowsRegistry,
-			detectCurrentPath)
+
+		usageMessage := "Use './java-scanner scan --help' for a list of scanning options!"
+		if !(detectCurrentPath || detectLinuxAlternatives || detectWindowsRegistry || detectRunningProcesses || detectFileSystemScan) {
+			log.Infof("No detected methods configured! " + usageMessage)
+			return
+		}
+
+		log.Infof("Activated Detection methods:" +
+			formatMethodIfActivated(detectRunningProcesses, RunningProcesses) +
+			formatMethodIfActivated(detectFileSystemScan, FileSystem) +
+			formatMethodIfActivated(detectLinuxAlternatives, LinuxAlternatives) +
+			formatMethodIfActivated(detectWindowsRegistry, WindowsRegistry) +
+			formatMethodIfActivated(detectCurrentPath, CurrentPath))
+		log.Infof(usageMessage)
+
 		Scan()
 	},
+}
+
+func formatMethodIfActivated(methodActivated bool, detectionMethod DetectionMethod) string {
+	if methodActivated {
+		return " " + detectionMethod.String()
+	}
+	return ""
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

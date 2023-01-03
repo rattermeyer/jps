@@ -8,9 +8,9 @@ import (
 )
 
 func detectRunningProcessesMain() []JavaInfo {
-	log.Infof("Starting detection '%s'...\n", RunningProcesses)
+	log.Infof("Starting detection '%s'...", RunningProcesses)
 	resultRunningProcesses := extractJavaProcessInfos()
-	log.Infof("number of detected running processes: %d!\n", len(resultRunningProcesses))
+	log.Infof("number of detected running processes: %d!", len(resultRunningProcesses))
 
 	return resultRunningProcesses
 }

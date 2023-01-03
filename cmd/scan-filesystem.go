@@ -9,16 +9,16 @@ import (
 )
 
 func detectFileSystemScanMain() []JavaInfo {
-	log.Infof("Starting detection '%s' while excluding %s...\n", FileSystem, detectFileSystemScanExcludePaths)
+	log.Infof("Starting detection '%s' while excluding %s...", FileSystem, detectFileSystemScanExcludePaths)
 	var result []JavaInfo
 	scanTimestamp := time.Now()
 	for _, rootPath := range detectFileSystemScanRootPaths {
 		count := 0
-		log.Infof("Scanning started at root path %s...\n", rootPath)
+		log.Infof("Scanning started at root path %s...", rootPath)
 
 		targetFiles, _ := collectFiles(rootPath, detectFileSystemScanExcludePaths)
 
-		log.Infof("File system scan found java installations: %v\n", targetFiles)
+		log.Infof("File system scan found java installations: %v", targetFiles)
 		for _, javaBinary := range targetFiles {
 			info := JavaInfo{ScanTimestamp: scanTimestamp, DetectionMethod: FileSystem}
 			info.Hostname, _ = os.Hostname()
@@ -31,7 +31,7 @@ func detectFileSystemScanMain() []JavaInfo {
 				count = count + 1
 			}
 		}
-		log.Infof("number of valid java installations found by filesystem scan below root path %s: %d!\n", rootPath, count)
+		log.Infof("number of valid java installations found by filesystem scan below root path %s: %d!", rootPath, count)
 	}
 	return result
 }
@@ -54,7 +54,7 @@ func collectFiles(dir string, excludeList []string) (fileList []string, err erro
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("walk error [%v]\n", err)
+		log.Fatalf("walk error [%v]", err)
 		return nil, err
 	}
 	return fileList, nil
