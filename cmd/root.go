@@ -44,20 +44,6 @@ var scanCmd = &cobra.Command{
 	Short: "scan processes and report found java processes",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		usageMessage := "Use './java-scanner scan --help' for a list of scanning options!"
-		if !(detectCurrentPath || detectLinuxAlternatives || detectWindowsRegistry || detectRunningProcesses || detectFileSystemScan) {
-			log.Infof("No detected methods configured! " + usageMessage)
-			return
-		}
-
-		log.Infof("Activated Detection methods:" +
-			formatMethodIfActivated(detectRunningProcesses, RunningProcesses) +
-			formatMethodIfActivated(detectFileSystemScan, FileSystem) +
-			formatMethodIfActivated(detectLinuxAlternatives, LinuxAlternatives) +
-			formatMethodIfActivated(detectWindowsRegistry, WindowsRegistry) +
-			formatMethodIfActivated(detectCurrentPath, CurrentPath))
-		log.Infof(usageMessage)
-
 		Scan()
 	},
 }
