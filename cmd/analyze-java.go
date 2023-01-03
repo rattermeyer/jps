@@ -12,6 +12,9 @@ func analyzeJavaBinaryMain(info *JavaInfo) {
 	err := _analyzeJavaBinary(info, false)
 	if err != nil {
 		err = _analyzeJavaBinary(info, true)
+		//note that errorText is already added to info.ErrorText
+		log.Warnf("Failed to analyze java binary %s: %s", info.Exe, err.Error())
+
 	}
 }
 
@@ -71,7 +74,7 @@ func extractPropertiesFromVersionOutput(info *JavaInfo) error {
 }
 
 func extractMajorAndBuildNumber(versionString string) (int, int) {
-	major, _ := regexp.Compile("(\\d+)\\.(\\d).(\\d).*?_?(\\d+)?")
+	major, _ := regexp.Compile(`(\d+)\.(\d).(\d).*?_?(\d+)?`)
 	versionFormat := major.MatchString(versionString)
 	if versionFormat {
 		allString := major.FindStringSubmatch(versionString)
@@ -90,7 +93,7 @@ func extractMajorAndBuildNumber(versionString string) (int, int) {
 }
 
 func extractRuntimeName(runtimeLine string) string {
-	pattern, _ := regexp.Compile("(\\D+).*\\(.*?\\)")
+	pattern, _ := regexp.Compile(`(\D+).*\(.*?\)`)
 	runtimeName := pattern.FindStringSubmatch(runtimeLine)[1]
 	return strings.Trim(runtimeName, " ")
 }
