@@ -9,12 +9,12 @@ import (
 )
 
 func detectFileSystemScanMain() []JavaInfo {
-	log.Infof("Starting detection 'filesystem-scan' while excluding %s...\n", detectFileSystemScanExcludePaths)
+	log.Infof("Starting detection '%s' while excluding %s...\n", FileSystem, detectFileSystemScanExcludePaths)
 	var result []JavaInfo
 	scanTimestamp := time.Now()
 	for _, rootPath := range detectFileSystemScanRootPaths {
 		count := 0
-		log.Infof("Scanning startet at root path %s...\n", rootPath)
+		log.Infof("Scanning started at root path %s...\n", rootPath)
 
 		targetFiles, _ := collectFiles(rootPath, detectFileSystemScanExcludePaths)
 

@@ -13,6 +13,7 @@ var detectFileSystemScan bool
 var detectFileSystemScanRootPaths []string
 var detectFileSystemScanExcludePaths []string
 
+var detectCurrentPath bool
 var appendToFindingsJson bool
 
 type DetectionMethod int64
@@ -22,6 +23,7 @@ const (
 	LinuxAlternatives
 	RunningProcesses
 	WindowsRegistry
+	CurrentPath
 )
 
 func (s DetectionMethod) String() string {
@@ -34,7 +36,10 @@ func (s DetectionMethod) String() string {
 		return "running-processes"
 	case WindowsRegistry:
 		return "windows-registry"
+	case CurrentPath:
+		return "current-path"
 	}
+
 	return "unknown"
 }
 
@@ -74,6 +79,11 @@ func Scan() {
 
 	printNoYetImplemented(detectWindowsRegistry, "detect-windows-registry")
 
+	if detectCurrentPath {
+		resultCurrentPath := detectCurrentPathMain()
+		overallResult = append(overallResult, resultCurrentPath...)
+		fmt.Println()
+	}
 	logOverallResults(overallResult)
 	createCsvFile(overallResult)
 

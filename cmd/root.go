@@ -87,6 +87,7 @@ func init() {
 	scanCmd.Flags().BoolVarP(&detectWindowsRegistry, "scan-windows-registry", "r", false, "Activate windows registry scanning")
 	scanCmd.Flags().BoolVarP(&detectLinuxAlternatives, "scan-linux-alternatives", "a", false, "Activate linux-alternatives scanning")
 	scanCmd.Flags().BoolVarP(&detectRunningProcesses, "scan-running-processes", "p", true, "Activate running processes scanning")
+	scanCmd.Flags().BoolVarP(&detectCurrentPath, "scan-current-path", "c", true, "Activate scanning of current path")
 
 	scanCmd.Flags().BoolVarP(&detectFileSystemScan, "scan-file-system", "f", false, "Activate running processes scanning")
 

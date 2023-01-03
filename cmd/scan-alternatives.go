@@ -8,7 +8,7 @@ import (
 )
 
 func detectLinuxAlternativesMain() []JavaInfo {
-	log.Infof("Starting detection 'linux alternatives'...\n")
+	log.Infof("Starting detection '%s'...\n", LinuxAlternatives)
 	//update-alternatives --list java
 	cmdArgs := [4]string{"-n", "update-alternatives", "--list", "java"}
 
