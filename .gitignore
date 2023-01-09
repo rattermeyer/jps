@@ -12,3 +12,9 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+/java-scanner.iml
+/logrus.log
+/findings.log
+/result_*.csv
+/jps.iml
+/java-scanner
